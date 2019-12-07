@@ -10,7 +10,7 @@ public class Day7 {
     public static void main(String[] args) {
         try {
             ClassLoader classLoader = ReadUtils.class.getClassLoader();
-            File file = new File(classLoader.getResource("inputs/input2.in").getFile());
+            File file = new File(classLoader.getResource("inputs/input.in").getFile());
             Scanner sc = new Scanner(file);
             String line = sc.nextLine();
             String[] split = line.split(",");
@@ -40,34 +40,31 @@ public class Day7 {
                                     int[] intsC = Arrays.copyOf(ints, ints.length);
                                     int[] intsD = Arrays.copyOf(ints, ints.length);
                                     int[] intsE = Arrays.copyOf(ints, ints.length);
+                                    int[] lastIndexA = new int[1];
+                                    int[] lastIndexB = new int[1];
+                                    int[] lastIndexC = new int[1];
+                                    int[] lastIndexD = new int[1];
+                                    int[] lastIndexE = new int[1];
                                     int n = 0;
+                                    boolean feedbackMode = false;
                                     while (true) {
                                         if (n == 0) {
-//                                            System.out.println("A input: " + currInput);
-                                            currInput = intcode(intsA, i, currInput);
-//                                            System.out.println("A output: " + currInput);
+                                            currInput = intcode(intsA, i, currInput, lastIndexA, feedbackMode);
                                         }
                                         if (n == 1) {
-//                                            System.out.println("B input: " + currInput);
-                                            currInput = intcode(intsB, j, currInput);
-//                                            System.out.println("B output: " + currInput);
+                                            currInput = intcode(intsB, j, currInput, lastIndexB, feedbackMode);
                                         }
                                         if (n == 2) {
-//                                            System.out.println("C input: " + currInput);
-                                            currInput = intcode(intsC, k, currInput);
-//                                            System.out.println("C output: " + currInput);
+                                            currInput = intcode(intsC, k, currInput, lastIndexC, feedbackMode);
                                         }
                                         if (n == 3) {
-//                                            System.out.println("D input: " + currInput);
-                                            currInput = intcode(intsD, l, currInput);
-//                                            System.out.println("D output: " + currInput);
+                                            currInput = intcode(intsD, l, currInput, lastIndexD, feedbackMode);
                                         }
                                         if (n == 4) {
-//                                            System.out.println("E input: " + currInput);
-                                            currInput = intcode(intsE, m, currInput);
-//                                            System.out.println("E output: " + currInput);
+                                            currInput = intcode(intsE, m, currInput, lastIndexE, feedbackMode);
                                             if (currInput != Integer.MAX_VALUE) {
                                                 thE = currInput;
+                                                System.out.println(thE);
                                             }
                                         }
                                         if (currInput == Integer.MAX_VALUE) {
@@ -75,6 +72,11 @@ public class Day7 {
                                             break;
                                         }
                                         n++;
+                                        if (n == 5) {
+                                            // TODO temp
+                                            feedbackMode = true;
+//                                            break;
+                                        }
                                         n = n % 5;
                                     }
                                     if (max < thE) {
@@ -94,10 +96,9 @@ public class Day7 {
         }
     }
 
-    private static int intcode(int[] ints, int phase, int input) {
-        int index = 0;
+    private static int intcode(int[] ints, int phase, int input, int[] lastIndex, boolean feedbackMode) {
+        int index = lastIndex[0];
         int readPointer = 0;
-        int breakCode = 0;
         try {
             while (index < ints.length) {
                 int opcode = ints[index] % 100;
@@ -110,7 +111,7 @@ public class Day7 {
                 if (opcode == 3 || opcode == 4) {
                     if (ints[index] == 3) {
                         int newIn = input;
-                        if (readPointer == 0) {
+                        if (readPointer == 0 && !feedbackMode) {
                             newIn = phase;
                         }
                         readPointer++;
@@ -120,9 +121,11 @@ public class Day7 {
                             ints[index + 1] = newIn;
                         }
                     } else if (ints[index] == 4) {
+                        lastIndex[0] = index + 2;
                         return ints[ints[index + 1]];
                     }
                     index += 2;
+                    lastIndex[0] = index;
                 } else if (opcode == 1 || opcode == 2 || opcode == 99) {
                     // Extract opcode and param types
                     int sum1 = paramType1 == 0 ? ints[ints[index + 1]] : ints[index + 1];
@@ -198,7 +201,9 @@ public class Day7 {
                 }
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
         }
+        lastIndex[0] = index;
 
         return Integer.MAX_VALUE;
     }
